@@ -21,25 +21,31 @@ class ShadowCar:
 			Creates a new instance of ShadowCar.
 		"""
 		self._logger = None
-		self._queue  = q.Queue()
 		self._instanciate_logger()
+		self._queue  = q.Queue()
+		self._video_capture = cv2.VideoCapture(0)
+		if not self._video_capture.isOpened():
+			self._logger.error('Capture device not found.')
+			exit(255)
+		else:
+			self._logger.info('Capture device found: {}'.format(self._video_capture.get(cv2.CAP_PROP_FPS  )))
+		self._camera_height = self._video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+		self._camera_width = self._video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+
 
 	def start(self):
-		cap = cv2.VideoCapture(0)
 
-		if not cap.isOpened():
-			self._logger.info('Capture device not found.')
-		else:
-			self._logger.info('Capture starting.')
 			while True:
 				initial_time = time.time()
 				# Capture frame-by-frame
-				ret, frame = cap.read()
+				ret, frame = self._video_capture.read()
 				self._queue.put(frame)
 
 				# Display the resulting frame
-				text = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-				cv2.putText(frame, text, (50,50), 0, 1, (255, 255, 255), lineType=5)
+				self._add_timestamp_to_frame(frame,
+				                             datetime.datetime.fromtimestamp(
+						                             time.time()).strftime(
+					                                    '%Y-%m-%d %H:%M:%S'))
 				cv2.imshow('frame', frame)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					self._save()
@@ -48,10 +54,34 @@ class ShadowCar:
 				print(self._queue.qsize())
 				time.sleep(max(0.1 - (time.time() - initial_time), 0))
 
+	def _add_timestamp_to_frame(self, frame, timestamp):
+		"""
+			Adds a small timestamp to the bottom-right of a frame.
+
+			:param frame: The cv2 frame in question
+			:param timestamp: the string to add.
+			:return: None
+		"""
+		cv2.rectangle(frame,
+		              (int(self._camera_width) - 175, int(self._camera_height) - 20),
+		              (int(self._camera_width) - 10,
+		               int(self._camera_height) - 10),
+		              (0, 0, 0, 0.2),
+		              thickness=-1 # Filled
+		)
+		cv2.putText(frame,
+		            timestamp,
+	                (   int(self._camera_width) - 175,
+		                int(self._camera_height) - 10),
+		            2,
+		            0.45,
+		            (255, 255, 255)
+		)
 
 	def _instanciate_logger(self):
 		"""
 			Instantiate and configure the logger object to use in the app.
+
 			:return: None
 		"""
 		self._logger = logging.getLogger('main')
@@ -62,6 +92,7 @@ class ShadowCar:
 	def _save(self):
 		"""
 			Saves the recorded video as an .avi file.
+
 			:param queue: The queue of video frames to use for the video.
 			:return: None
 		"""
@@ -70,7 +101,7 @@ class ShadowCar:
 		video_writer = cv2.VideoWriter(output_file_name,
 			cv2.VideoWriter_fourcc(*'DIVX'),
 			10.0,
-			(640, 480)
+			(self._camera_width, self._camera_height)
 		)
 		self._write_frames(video_writer)
 		video_writer.release()
