@@ -22,7 +22,9 @@ class ShadowCar:
 		"""
 		self._logger = None
 		self._instanciate_logger()
-		self._queue  = q.Queue()
+		self._frames_queue = q.Queue()
+		self._FPS = 8
+		self._RECORDING_TIME = 10 # In seconds
 		self._video_capture = cv2.VideoCapture(0)
 		if not self._video_capture.isOpened():
 			self._logger.error('Capture device not found.')
@@ -34,25 +36,40 @@ class ShadowCar:
 
 
 	def start(self):
+		"""
+			Starts the recording.
 
-			while True:
-				initial_time = time.time()
-				# Capture frame-by-frame
-				ret, frame = self._video_capture.read()
-				self._queue.put(frame)
+			:return: None
+		"""
 
-				# Display the resulting frame
-				self._add_timestamp_to_frame(frame,
-				                             datetime.datetime.fromtimestamp(
-						                             time.time()).strftime(
-					                                    '%Y-%m-%d %H:%M:%S'))
-				cv2.imshow('frame', frame)
-				if cv2.waitKey(1) & 0xFF == ord('q'):
-					self._save()
-				if self._queue.qsize() > 200:
-					self._queue.get()
-				print(self._queue.qsize())
-				time.sleep(max(0.1 - (time.time() - initial_time), 0))
+		while True:
+			initial_time = time.time()
+			# Capture frame-by-frame
+			ret, frame = self._video_capture.read()
+			self._frames_queue.put(frame)
+
+			# Display the resulting frame
+			self._add_timestamp_to_frame(frame,
+			                             datetime.datetime.fromtimestamp(
+					                             time.time()).strftime(
+				                                    '%Y-%m-%d %H:%M:%S'))
+			cv2.imshow('frame', frame)
+			if cv2.waitKey(1) & 0xFF == ord('q'):
+				self._save()
+			self._remove_frame_if_needed()
+			print(self._frames_queue.qsize())
+			time.sleep(max(time.time() - initial_time < self._FPS / 100, 0))
+
+	def _remove_frame_if_needed(self):
+		"""
+			Removes an element from self._frames_queue if it reached
+			it's max length.
+
+			:return: None
+		"""
+		if self._frames_queue.qsize() > self._FPS * self._RECORDING_TIME:
+			self._frames_queue.get()
+
 
 	def _add_timestamp_to_frame(self, frame, timestamp):
 		"""
@@ -66,7 +83,7 @@ class ShadowCar:
 		              (int(self._camera_width) - 175, int(self._camera_height) - 20),
 		              (int(self._camera_width) - 10,
 		               int(self._camera_height) - 10),
-		              (0, 0, 0, 0.2),
+		              (0, 0, 0),
 		              thickness=-1 # Filled
 		)
 		cv2.putText(frame,
@@ -77,6 +94,7 @@ class ShadowCar:
 		            0.45,
 		            (255, 255, 255)
 		)
+
 
 	def _instanciate_logger(self):
 		"""
@@ -93,14 +111,13 @@ class ShadowCar:
 		"""
 			Saves the recorded video as an .avi file.
 
-			:param queue: The queue of video frames to use for the video.
 			:return: None
 		"""
 		self._logger.info('Saving...')
 		output_file_name = self._get_output_file_name()
 		video_writer = cv2.VideoWriter(output_file_name,
 			cv2.VideoWriter_fourcc(*'DIVX'),
-			10.0,
+			self._FPS,
 			(int(self._camera_width), int(self._camera_height))
 		)
 		self._write_frames(video_writer)
@@ -114,9 +131,9 @@ class ShadowCar:
 			:param video_writer: The cv2.VideoWriter instance.
 			:return: None
 		"""
-		while self._queue.qsize() > 0:
-			self._logger.info('{} frame(s) left.'.format(self._queue.qsize()))
-			video_writer.write(self._queue.get())
+		while self._frames_queue.qsize() > 0:
+			self._logger.info('{} frame(s) left.'.format(self._frames_queue.qsize()))
+			video_writer.write(self._frames_queue.get())
 
 
 	@staticmethod
