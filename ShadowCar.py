@@ -10,6 +10,7 @@ import cv2
 import time
 import logging
 import queue as q
+import pyaudio as pa
 
 class ShadowCar:
 	"""
@@ -24,7 +25,7 @@ class ShadowCar:
 		self._instanciate_logger()
 		self._frames_queue = q.Queue()
 		self._FPS = 8
-		self._RECORDING_TIME = 10 # In seconds
+		self._RECORDING_TIME = 300 # In seconds
 		self._video_capture = cv2.VideoCapture(0)
 		if not self._video_capture.isOpened():
 			self._logger.error('Capture device not found.')
@@ -44,21 +45,49 @@ class ShadowCar:
 
 		while True:
 			initial_time = time.time()
-			# Capture frame-by-frame
-			ret, frame = self._video_capture.read()
-			self._frames_queue.put(frame)
+			self._capture_video_frame()
+			time.sleep(max(
+				(self._FPS / 100) - ((time.time() - initial_time) / 100),
+				0))
 
-			# Display the resulting frame
-			self._add_timestamp_to_frame(frame,
-			                             datetime.datetime.fromtimestamp(
-					                             time.time()).strftime(
-				                                    '%Y-%m-%d %H:%M:%S'))
-			cv2.imshow('frame', frame)
-			if cv2.waitKey(1) & 0xFF == ord('q'):
-				self._save()
-			self._remove_frame_if_needed()
-			print(self._frames_queue.qsize())
-			time.sleep(max(time.time() - initial_time < self._FPS / 100, 0))
+	def _capture_video_frame(self):
+		"""
+			Captures a video frame and deals with it accordingly.
+
+			:return: None
+		"""
+
+		# Capture frame-by-frame
+		ret, frame = self._video_capture.read()
+		self._frames_queue.put(frame)
+		# Display the resulting frame
+		self._add_timestamp_to_frame(frame,
+		                             datetime.datetime.fromtimestamp(
+				                             time.time()).strftime(
+				                             '%Y-%m-%d %H:%M:%S'))
+		cv2.imshow('frame', frame)
+		if cv2.waitKey(1) & 0xFF == ord('q'):
+			self._save()
+		self._remove_frame_if_needed()
+		print(self._frames_queue.qsize())  # To remove
+
+	def _save(self):
+		"""
+			Saves the recorded video as an .avi file.
+
+			:return: None
+		"""
+		self._logger.info('Saving...')
+		output_file_name = self._get_output_file_name()
+		video_writer = cv2.VideoWriter(output_file_name,
+			cv2.VideoWriter_fourcc(*'DIVX'),
+			self._FPS,
+			(int(self._camera_width), int(self._camera_height))
+		)
+		self._write_frames(video_writer)
+		video_writer.release()
+		self._logger.info('Saved {}.'.format(output_file_name))
+
 
 	def _remove_frame_if_needed(self):
 		"""
@@ -105,24 +134,6 @@ class ShadowCar:
 		self._logger = logging.getLogger('main')
 		self._logger.setLevel(logging.DEBUG)
 		self._logger.addHandler(logging.StreamHandler())
-
-
-	def _save(self):
-		"""
-			Saves the recorded video as an .avi file.
-
-			:return: None
-		"""
-		self._logger.info('Saving...')
-		output_file_name = self._get_output_file_name()
-		video_writer = cv2.VideoWriter(output_file_name,
-			cv2.VideoWriter_fourcc(*'DIVX'),
-			self._FPS,
-			(int(self._camera_width), int(self._camera_height))
-		)
-		self._write_frames(video_writer)
-		video_writer.release()
-		self._logger.info('Saved {}.'.format(output_file_name))
 
 
 	def _write_frames(self, video_writer):
