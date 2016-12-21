@@ -101,7 +101,7 @@ class ShadowCar:
 		video_writer = cv2.VideoWriter(output_file_name,
 			cv2.VideoWriter_fourcc(*'DIVX'),
 			10.0,
-			(self._camera_width, self._camera_height)
+			(int(self._camera_width), int(self._camera_height))
 		)
 		self._write_frames(video_writer)
 		video_writer.release()
