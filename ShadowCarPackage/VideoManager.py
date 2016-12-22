@@ -1,38 +1,30 @@
 """
-	@file        main.py
-	@description
-	@author      Res260
-	@created_at  20161219
-	@updated_at  20161219
+    @file        VideoManager
+    @description 
+    @author      Res260 
+    @created_at  20161221
+    @updated_at  20161221
 """
+
 import datetime
-import cv2
 import time
-import logging
+import cv2
 import queue as q
-import pyaudio as pa
 
-class ShadowCar:
-	"""
-		Class that manages the app.
-	"""
 
-	def __init__(self):
-		"""
-			Creates a new instance of ShadowCar.
-		"""
-		self._logger = None
-		self._instanciate_logger()
+class VideoManager:
+	def __init__(self, context, logger):
+		self._context = context
+		self._logger = logger
 		self._frames_queue = q.Queue()
-		self._FPS = 1
-		self._RECORDING_TIME = 300 # In seconds
 		self._video_capture = cv2.VideoCapture(0)
 		if not self._video_capture.isOpened():
 			self._logger.error('Capture device not found.')
 			exit(255)
 		else:
-			self._logger.info('Capture device found: {}'.format(self._video_capture.get(cv2.CAP_PROP_FPS  )))
-		self._camera_height = self._video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+			self._logger.info('Capture device found: {}'.format(self._video_capture.get(cv2.CAP_PROP_FPS)))
+		self._camera_height = self._video_capture.get(
+				cv2.CAP_PROP_FRAME_HEIGHT)
 		self._camera_width = self._video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
 
 
@@ -46,7 +38,7 @@ class ShadowCar:
 		while True:
 			initial_time = time.time()
 			self._capture_video_frame()
-			while (time.time() - initial_time) < 1 / self._FPS:
+			while (time.time() - initial_time) < 1 / self._context.FPS:
 				pass
 
 	def _capture_video_frame(self):
@@ -77,10 +69,10 @@ class ShadowCar:
 			:return: None
 		"""
 		self._logger.info('Saving...')
-		output_file_name = self._get_output_file_name()
+		output_file_name = self._context.get_output_file_name()
 		video_writer = cv2.VideoWriter(output_file_name,
 			cv2.VideoWriter_fourcc(*'DIVX'),
-			self._FPS,
+			self._context.FPS,
 			(int(self._camera_width), int(self._camera_height))
 		)
 		self._write_frames(video_writer)
@@ -95,7 +87,7 @@ class ShadowCar:
 
 			:return: None
 		"""
-		if self._frames_queue.qsize() > self._FPS * self._RECORDING_TIME:
+		if self._frames_queue.qsize() > self._context.FPS * self._context.RECORDING_TIME:
 			self._frames_queue.get()
 
 
@@ -123,18 +115,6 @@ class ShadowCar:
 		            (255, 255, 255)
 		)
 
-
-	def _instanciate_logger(self):
-		"""
-			Instantiate and configure the logger object to use in the app.
-
-			:return: None
-		"""
-		self._logger = logging.getLogger('main')
-		self._logger.setLevel(logging.DEBUG)
-		self._logger.addHandler(logging.StreamHandler())
-
-
 	def _write_frames(self, video_writer):
 		"""
 			Writes the frames in the queue using video_writer.
@@ -144,15 +124,3 @@ class ShadowCar:
 		while self._frames_queue.qsize() > 0:
 			self._logger.info('{} frame(s) left.'.format(self._frames_queue.qsize()))
 			video_writer.write(self._frames_queue.get())
-
-
-	@staticmethod
-	def _get_output_file_name():
-		"""
-			:return: A string formatted using
-					 this format: save_%Y%m%d_%H-%M-%S.avi
-		"""
-		return 'save_{}.avi'.format(
-				datetime.datetime.fromtimestamp(time.time())
-					.strftime('%Y%m%d_%H-%M-%S'))
-

@@ -5,7 +5,7 @@
     @created_at  20161220
     @updated_at  20161220
 """
-from ShadowCar import ShadowCar
+from ShadowCarPackage.ShadowCar import ShadowCar
 
 
 def main():
