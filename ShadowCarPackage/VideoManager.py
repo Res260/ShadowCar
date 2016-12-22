@@ -17,6 +17,8 @@ class VideoManager:
 			Class that manage the video for the app.
 	"""
 
+	CODEC = cv2.VideoWriter_fourcc(*'DIVX')
+
 	def __init__(self, context, logger):
 		"""
 			Creates a new instance of VideoManager.
@@ -82,7 +84,7 @@ class VideoManager:
 		self._logger.info('Saving...')
 		output_file_name = self._context.get_output_file_name()
 		video_writer = cv2.VideoWriter(output_file_name,
-			cv2.VideoWriter_fourcc(*'DIVX'),
+			self.CODEC,
 			self._context.FPS,
 			(int(self._camera_width), int(self._camera_height))
 		)
