@@ -32,6 +32,7 @@ class ShadowCar:
 		self._video_thread = None
 		self._audio_manager = AudioManager(self, self._logger)
 		self._audio_thread = None
+		self.is_running = False
 
 
 	def start(self):
@@ -40,9 +41,11 @@ class ShadowCar:
 
 			:return: None
 		"""
-		self._video_thread = Thread(target=self._video_manager.start())
-		self._audio_thread = Thread(target=self._audio_manager.start())
-
+		self._video_thread = Thread(target=self._video_manager.start)
+		self._audio_thread = Thread(target=self._audio_manager.start)
+		self._video_thread.start()
+		self._audio_thread.start()
+		self.is_running = True
 
 	def _instanciate_logger(self):
 		"""

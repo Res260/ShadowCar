@@ -34,9 +34,12 @@ class VideoManager:
 
 			:return: None
 		"""
+		while not self._context.is_running:
+			pass
 
-		while True:
+		while self._context.is_running:
 			initial_time = time.time()
+			self._logger.debug('Video loop')
 			self._capture_video_frame()
 			while (time.time() - initial_time) < 1 / self._context.FPS:
 				pass

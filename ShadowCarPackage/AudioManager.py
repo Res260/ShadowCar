@@ -5,6 +5,7 @@
     @created_at  20161221
     @updated_at  20161221
 """
+import time
 import pyaudio as pa
 
 class AudioManager:
@@ -14,4 +15,11 @@ class AudioManager:
 		self._pyaudio = pa.PyAudio()
 
 	def start(self):
-		pass
+		while not self._context.is_running:
+			pass
+
+		while self._context.is_running:
+			initial_time = time.time()
+			self._logger.debug('Audio loop')
+			while (time.time() - initial_time) < 1 / self._context.FPS:
+				pass
