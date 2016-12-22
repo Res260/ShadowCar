@@ -1,9 +1,9 @@
-REM File: install.bat
-REM Description: Install the required dependencies for the program.
-REM NOTE:        NEED TO RUN THIS AS AN ADMIN.
-REM Created at: 161222
-REM Modified at:161222
-REM By: Res260
+:: File: install.bat
+:: Description: Install the required dependencies for the program.
+:: NOTE:        NEED TO RUN THIS AS AN ADMIN.
+:: Created at: 161222
+:: Modified at:161222
+:: By: Res260
 
 @echo off
 net session >nul 2>&1
