@@ -17,6 +17,7 @@ class VideoManager:
 		self._context = context
 		self._logger = logger
 		self._frames_queue = q.Queue()
+		self._timestamps_queue = q.Queue()
 		self._video_capture = cv2.VideoCapture(0)
 		if not self._video_capture.isOpened():
 			self._logger.error('Capture device not found.')
@@ -40,6 +41,7 @@ class VideoManager:
 		while self._context.is_running:
 			initial_time = time.time()
 			self._logger.debug('Video loop')
+			self._timestamps_queue.put(initial_time)
 			self._capture_video_frame()
 			while (time.time() - initial_time) < 1 / self._context.FPS:
 				pass
@@ -55,10 +57,6 @@ class VideoManager:
 		ret, frame = self._video_capture.read()
 		self._frames_queue.put(frame)
 		# Display the resulting frame
-		self._add_timestamp_to_frame(frame,
-		                             datetime.datetime.fromtimestamp(
-				                             time.time()).strftime(
-				                             '%Y-%m-%d %H:%M:%S'))
 		cv2.imshow('frame', frame)
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			self._save()
@@ -85,13 +83,14 @@ class VideoManager:
 
 	def _remove_frame_if_needed(self):
 		"""
-			Removes an element from self._frames_queue if it reached
-			it's max length.
+			Removes an element from self._frames_queue and
+			self._timestamps_queue if it reached its max length.
 
 			:return: None
 		"""
 		if self._frames_queue.qsize() > self._context.FPS * self._context.RECORDING_TIME:
 			self._frames_queue.get()
+			self._timestamps_queue.get()
 
 
 	def _add_timestamp_to_frame(self, frame, timestamp):
@@ -126,4 +125,8 @@ class VideoManager:
 		"""
 		while self._frames_queue.qsize() > 0:
 			self._logger.info('{} frame(s) left.'.format(self._frames_queue.qsize()))
-			video_writer.write(self._frames_queue.get())
+			frame = self._frames_queue.get()
+			self._add_timestamp_to_frame(frame, datetime.datetime.fromtimestamp(
+											    self._timestamps_queue.get()).strftime(
+				                                '%Y-%m-%d %H:%M:%S'))
+			video_writer.write(frame)

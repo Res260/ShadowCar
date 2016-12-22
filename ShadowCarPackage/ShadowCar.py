@@ -20,7 +20,7 @@ class ShadowCar:
 	"""
 
 	FPS = 8
-	RECORDING_TIME = 300  # In seconds
+	RECORDING_TIME = 5  # In seconds
 
 	def __init__(self):
 		"""
