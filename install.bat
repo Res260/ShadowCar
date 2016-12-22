@@ -13,3 +13,4 @@ if %errorLevel% == 0 (
 ) else (
 	echo Run the program as an admin.
 )
+pause
