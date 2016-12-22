@@ -24,7 +24,7 @@ class ShadowCar:
 		self._logger = None
 		self._instanciate_logger()
 		self._frames_queue = q.Queue()
-		self._FPS = 8
+		self._FPS = 1
 		self._RECORDING_TIME = 300 # In seconds
 		self._video_capture = cv2.VideoCapture(0)
 		if not self._video_capture.isOpened():
@@ -46,9 +46,8 @@ class ShadowCar:
 		while True:
 			initial_time = time.time()
 			self._capture_video_frame()
-			time.sleep(max(
-				(self._FPS / 100) - ((time.time() - initial_time) / 100),
-				0))
+			while (time.time() - initial_time) < 1 / self._FPS:
+				pass
 
 	def _capture_video_frame(self):
 		"""
