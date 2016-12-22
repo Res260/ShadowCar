@@ -13,7 +13,17 @@ import queue as q
 
 
 class VideoManager:
+	"""
+			Class that manage the video for the app.
+	"""
+
 	def __init__(self, context, logger):
+		"""
+			Creates a new instance of VideoManager.
+
+			:param context: The ShadowCar object that created `self`
+			:param logger:  The logger instance of the app.
+		"""
 		self._context = context
 		self._logger = logger
 		self._frames_queue = q.Queue()
@@ -117,9 +127,12 @@ class VideoManager:
 		            (255, 255, 255)
 		)
 
+
 	def _write_frames(self, video_writer):
 		"""
-			Writes the frames in the queue using video_writer.
+			Writes the frames in the queue using video_writer. Adds a
+			timestamp to each frame as well.
+
 			:param video_writer: The cv2.VideoWriter instance.
 			:return: None
 		"""

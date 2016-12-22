@@ -9,7 +9,17 @@ import time
 import pyaudio as pa
 
 class AudioManager:
+	"""
+		Class that manage the audio for the app.
+	"""
+
 	def __init__(self, context, logger):
+		"""
+			Creates a new instance of AudioManager.
+
+			:param context: The ShadowCar object that created `self`
+			:param logger:  The logger instance of the app.
+		"""
 		self._context = context
 		self._logger = logger
 		self._pyaudio = pa.PyAudio()
