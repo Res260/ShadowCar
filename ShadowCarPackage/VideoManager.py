@@ -43,9 +43,7 @@ class VideoManager:
 
 	def start(self):
 		"""
-			Starts the recording.
-
-			:return: None
+			Starts the video recording.
 		"""
 		while not self._context.is_running:
 			pass
@@ -61,8 +59,6 @@ class VideoManager:
 	def _capture_video_frame(self):
 		"""
 			Captures a video frame and deals with it accordingly.
-
-			:return: None
 		"""
 
 		# Capture frame-by-frame
@@ -78,8 +74,6 @@ class VideoManager:
 	def _save(self):
 		"""
 			Saves the recorded video as an .avi file.
-
-			:return: None
 		"""
 		self._logger.info('Saving...')
 		output_file_name = self._context.get_output_file_name()
@@ -97,8 +91,6 @@ class VideoManager:
 		"""
 			Removes an element from self._frames_queue and
 			self._timestamps_queue if it reached its max length.
-
-			:return: None
 		"""
 		if self._frames_queue.qsize() > self._context.FPS * self._context.RECORDING_TIME:
 			self._frames_queue.get()
@@ -111,7 +103,7 @@ class VideoManager:
 
 			:param frame: The cv2 frame in question
 			:param timestamp: the string to add.
-			:return: None
+			
 		"""
 		cv2.rectangle(frame,
 		              (int(self._camera_width) - 175, int(self._camera_height) - 20),
@@ -136,7 +128,6 @@ class VideoManager:
 			timestamp to each frame as well.
 
 			:param video_writer: The cv2.VideoWriter instance.
-			:return: None
 		"""
 		while self._frames_queue.qsize() > 0:
 			self._logger.info('{} frame(s) left.'.format(self._frames_queue.qsize()))

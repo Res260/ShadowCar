@@ -11,7 +11,6 @@ from ShadowCarPackage.ShadowCar import ShadowCar
 def main():
 	'''
 		Starts the program.
-		:return: None
 	'''
 	shadow_car = ShadowCar()
 	shadow_car.start()
