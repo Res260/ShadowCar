@@ -3,13 +3,16 @@
     @description 
     @author      Res260 
     @created_at  20161221
-    @updated_at  20161221
+    @updated_at  20161225
 """
 import time
 import queue as q
 import wave
 
 import pyaudio as pa
+
+import ShadowCarPackage
+
 
 class AudioManager:
 	"""
@@ -30,7 +33,6 @@ class AudioManager:
 		self._context = context
 		self._logger = logger
 		self._chunks_queue = q.Queue()
-		self._timestamps_queue = q.Queue()
 		self.CHUNK = int(self.RATE / self._context.FPS)
 		if self.CHUNK != self.RATE / self._context.FPS:
 			self._logger.error('Current sound sample rate value ({}) is not '
@@ -49,23 +51,29 @@ class AudioManager:
 		self._logger.info('Audio stream opened, ready for recording.')
 
 
-	def start(self):
+	def run(self):
 		"""
-			Starts the audio recording.
+			Starts the audio recording. When context.is_running is set to false,
+			saves the audio.
 		"""
 		while not self._context.is_running:
 			pass
 
 		while self._context.is_running:
-			if self._chunks_queue.qsize() > 100:
-				self._save()
 			initial_time = time.time()
 			self._logger.debug('Audio loop')
 			self._capture_audio_chunk()
 			while (time.time() - initial_time) < 1 / self._context.FPS:
 				pass
 
+		self._save()
+
 	def _save(self):
+		"""
+			Saves the audio to a wave file. Empties self._chunks_queue.
+		"""
+
+		file_name = self._context.get_output_file_name(ShadowCarPackage.AUDIO)
 
 		audio_sample = []
 		while self._chunks_queue.qsize() > 0:
@@ -73,7 +81,7 @@ class AudioManager:
 			audio_sample.append(self._chunks_queue.get())
 
 		self._logger.info('Opening wave file...')
-		wf = wave.open(self._context.get_output_file_name() + '.wav', 'wb')
+		wf = wave.open(file_name, 'wb')
 		wf.setnchannels(self.CHANNELS)
 		wf.setsampwidth(self._pyaudio.get_sample_size(self.FORMAT))
 		wf.setframerate(self.RATE)
@@ -81,6 +89,21 @@ class AudioManager:
 		wf.close()
 		self._logger.info('Audio saved.')
 
+
 	def _capture_audio_chunk(self):
+		"""
+			Captures an audio chunk of self.CHUNK samples and add it to
+			self._chunks_queue.
+		"""
 		self._chunks_queue.put(self._stream.read(self.CHUNK))
+		self._remove_chunk_if_needed()
 		self._logger.info(self._chunks_queue.qsize())
+
+
+	def _remove_chunk_if_needed(self):
+		"""
+			Removes an element from self._chunks_queue if it reached its
+			max length.
+		"""
+		if self._chunks_queue.qsize() > self._context.FPS * self._context.RECORDING_TIME:
+			self._chunks_queue.get()

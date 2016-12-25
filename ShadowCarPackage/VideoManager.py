@@ -3,13 +3,15 @@
     @description 
     @author      Res260 
     @created_at  20161221
-    @updated_at  20161221
+    @updated_at  20161225
 """
 
 import datetime
 import time
 import cv2
 import queue as q
+
+import ShadowCarPackage
 
 
 class VideoManager:
@@ -41,9 +43,10 @@ class VideoManager:
 		self._camera_width = self._video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
 
 
-	def start(self):
+	def run(self):
 		"""
-			Starts the video recording.
+			Starts the video recording. When context.is_running is set to false,
+			saves the video.
 		"""
 		while not self._context.is_running:
 			pass
@@ -56,6 +59,9 @@ class VideoManager:
 			while (time.time() - initial_time) < 1 / self._context.FPS:
 				pass
 
+		self._save()
+
+
 	def _capture_video_frame(self):
 		"""
 			Captures a video frame and deals with it accordingly.
@@ -66,8 +72,8 @@ class VideoManager:
 		self._frames_queue.put(frame)
 		# Display the resulting frame
 		cv2.imshow('frame', frame)
-		if cv2.waitKey(1) & 0xFF == ord('q'):
-			self._save()
+		cv2.waitKey(1)
+
 		self._remove_frame_if_needed()
 		print(self._frames_queue.qsize())  # To remove
 
@@ -76,7 +82,8 @@ class VideoManager:
 			Saves the recorded video as an .avi file.
 		"""
 		self._logger.info('Saving...')
-		output_file_name = self._context.get_output_file_name()
+		output_file_name = self._context.get_output_file_name(
+									ShadowCarPackage.VIDEO)
 		video_writer = cv2.VideoWriter(output_file_name,
 			self.CODEC,
 			self._context.FPS,
