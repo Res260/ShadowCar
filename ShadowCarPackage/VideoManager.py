@@ -75,7 +75,7 @@ class VideoManager:
 		cv2.waitKey(1)
 
 		self._remove_frame_if_needed()
-		print(self._frames_queue.qsize())  # To remove
+		self._logger.debug('{} (vid)'.format(self._frames_queue.qsize()))
 
 	def _save(self):
 		"""
@@ -137,7 +137,7 @@ class VideoManager:
 			:param video_writer: The cv2.VideoWriter instance.
 		"""
 		while self._frames_queue.qsize() > 0:
-			self._logger.info('{} frame(s) left.'.format(self._frames_queue.qsize()))
+			self._logger.debug('{} frame(s) left.'.format(self._frames_queue.qsize()))
 			frame = self._frames_queue.get()
 			self._add_timestamp_to_frame(frame, datetime.datetime.fromtimestamp(
 											    self._timestamps_queue.get()).strftime(

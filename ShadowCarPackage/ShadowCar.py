@@ -49,6 +49,8 @@ class ShadowCar:
 		"""
 		self.create_app_folders()
 
+		self._logger.info('Starting the recording.')
+
 		self._video_thread = Thread(target=self._video_manager.run)
 		self._audio_thread = Thread(target=self._audio_manager.run)
 		self._input_thread = Thread(target=self._run)
@@ -77,8 +79,6 @@ class ShadowCar:
 	def _instanciate_logger(self):
 		"""
 			Instantiate and configure the logger object to use in the app.
-
-			:return: None
 		"""
 		self._logger = logging.getLogger('main')
 		self._logger.setLevel(logging.INFO)
@@ -91,16 +91,16 @@ class ShadowCar:
 			unmixed files.
 		"""
 		self._logger.info('Starting ffmpeg...')
-		sp.run('ffmpeg -i {0} -i {1} -c:v copy '
+		sp.run('ffmpeg -v 0 -i {0} -i {1} -c:v copy '
 		         '-c:a aac -strict experimental {2}'
 		         .format(self.TEMP_FOLDER + self._video_manager.output_file_name,
 		                 self.TEMP_FOLDER + self._audio_manager.output_file_name,
 		                 self.SAVE_FOLDER + self._video_manager.output_file_name))
+		self._logger.info('Save done. Output file: {}'
+		                  .format(self._video_manager.output_file_name))
 		self._logger.info('Cleaning the temp folder...')
 		for file in glob.glob(self.TEMP_FOLDER + '*'):
 			os.remove(file)
-		self._logger.info('Save done. Output file: {}'
-		                  .format(self._video_manager.output_file_name))
 
 
 	def create_app_folders(self):
@@ -127,4 +127,3 @@ class ShadowCar:
 								datetime.datetime.fromtimestamp(time.time())
 									.strftime('%Y%m%d_%H-%M-%S'),
 								file_extension)
-

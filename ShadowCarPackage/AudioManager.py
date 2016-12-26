@@ -77,7 +77,7 @@ class AudioManager:
 
 		audio_sample = []
 		while self._chunks_queue.qsize() > 0:
-			self._logger.info('{} chunks left'.format(self._chunks_queue.qsize()))
+			self._logger.debug('{} chunks left'.format(self._chunks_queue.qsize()))
 			audio_sample.append(self._chunks_queue.get())
 
 		self._logger.info('Opening wave file...')
@@ -87,7 +87,7 @@ class AudioManager:
 		wf.setframerate(self.RATE)
 		wf.writeframes(b''.join(audio_sample))
 		wf.close()
-		self._logger.info('Audio saved.')
+		self._logger.info('Saved {}.'.format(self.output_file_name))
 
 
 	def _capture_audio_chunk(self):
@@ -97,7 +97,7 @@ class AudioManager:
 		"""
 		self._chunks_queue.put(self._stream.read(self.CHUNK))
 		self._remove_chunk_if_needed()
-		self._logger.info(self._chunks_queue.qsize())
+		self._logger.debug('{} (aud)'.format(self._chunks_queue.qsize()))
 
 
 	def _remove_chunk_if_needed(self):
