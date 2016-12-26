@@ -82,16 +82,16 @@ class VideoManager:
 			Saves the recorded video as an .avi file.
 		"""
 		self._logger.info('Saving...')
-		output_file_name = self._context.get_output_file_name(
+		self.output_file_name = self._context.get_output_file_name(
 									ShadowCarPackage.VIDEO)
-		video_writer = cv2.VideoWriter(output_file_name,
+		video_writer = cv2.VideoWriter(self._context.TEMP_FOLDER + self.output_file_name,
 			self.CODEC,
 			self._context.FPS,
 			(int(self._camera_width), int(self._camera_height))
 		)
 		self._write_frames(video_writer)
 		video_writer.release()
-		self._logger.info('Saved {}.'.format(output_file_name))
+		self._logger.info('Saved {}.'.format(self.output_file_name))
 
 
 	def _remove_frame_if_needed(self):

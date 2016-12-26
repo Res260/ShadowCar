@@ -9,9 +9,9 @@ from ShadowCarPackage.ShadowCar import ShadowCar
 
 
 def main():
-	'''
+	"""
 		Starts the program.
-	'''
+	"""
 	shadow_car = ShadowCar()
 	shadow_car.start()
 

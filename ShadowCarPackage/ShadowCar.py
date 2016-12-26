@@ -6,7 +6,9 @@
 	@updated_at  20161219
 """
 import datetime
+import glob
 import logging
+import os
 import time
 import subprocess as sp
 from threading import Thread
@@ -23,6 +25,8 @@ class ShadowCar:
 
 	FPS = 8
 	RECORDING_TIME = 3  # In seconds
+	TEMP_FOLDER = 'tmp/'
+	SAVE_FOLDER = 'saves/'
 
 	def __init__(self):
 		"""
@@ -40,10 +44,11 @@ class ShadowCar:
 
 	def start(self):
 		"""
-			Starts the recording.
-
-			:return: None
+			Starts the recording. Also creates the temp and save folders if
+			necessary.
 		"""
+		self.create_app_folders()
+
 		self._video_thread = Thread(target=self._video_manager.run)
 		self._audio_thread = Thread(target=self._audio_manager.run)
 		self._input_thread = Thread(target=self._run)
@@ -51,6 +56,23 @@ class ShadowCar:
 		self._audio_thread.start()
 		self.is_running = True
 		self._input_thread.start()
+
+
+	def _run(self):
+		"""
+			Listens for trigger to save the input, then mixes the audio and the
+			video using ffmpeg.
+		"""
+		while self.is_running:
+			if self._audio_manager._chunks_queue.qsize() > 23 and\
+				self._video_manager._frames_queue.qsize() > 23: #RSUIVCERDSTUPCIERSTICERSTUCIERSTCUIE
+				self.is_running = False
+			time.sleep(0.2)
+		self._logger.info('Waiting on saves to complete...')
+		self._video_thread.join()
+		self._audio_thread.join()
+		self.mix_audio_and_video()
+
 
 	def _instanciate_logger(self):
 		"""
@@ -63,14 +85,32 @@ class ShadowCar:
 		self._logger.addHandler(logging.StreamHandler())
 
 
-	def _run(self):
-		while self.is_running:
-			if self._audio_manager._chunks_queue.qsize() > 23 and\
-				self._video_manager._frames_queue.qsize() > 23:
-				self.is_running = False
-		self._video_thread.join()
-		self._audio_thread.join()
-		sp.Popen('ffmpeg -i save.avi -i save.wav -c:v copy -c:a aac -strict experimental final.avi')
+	def mix_audio_and_video(self):
+		"""
+			Mixes the saved audio and video files, then deletes the
+			unmixed files.
+		"""
+		self._logger.info('Starting ffmpeg...')
+		sp.run('ffmpeg -i {0} -i {1} -c:v copy '
+		         '-c:a aac -strict experimental {2}'
+		         .format(self.TEMP_FOLDER + self._video_manager.output_file_name,
+		                 self.TEMP_FOLDER + self._audio_manager.output_file_name,
+		                 self.SAVE_FOLDER + self._video_manager.output_file_name))
+		self._logger.info('Cleaning the temp folder...')
+		for file in glob.glob(self.TEMP_FOLDER + '*'):
+			os.remove(file)
+		self._logger.info('Save done. Output file: {}'
+		                  .format(self._video_manager.output_file_name))
+
+
+	def create_app_folders(self):
+		"""
+			Creates the temp and saves folders if they don't exist.
+		"""
+		if not os.path.exists(self.TEMP_FOLDER):
+			os.makedirs(self.TEMP_FOLDER)
+		if not os.path.exists(self.SAVE_FOLDER):
+			os.makedirs(self.SAVE_FOLDER)
 
 
 	@staticmethod
@@ -83,9 +123,8 @@ class ShadowCar:
 					 *Depending on 'file_type'*
 		"""
 		file_extension = 'avi' if file_type == ShadowCarPackage.VIDEO else 'wav'
-		return 'save.' + file_extension
-		#return 'save_{}.{}'.format(
-		#						datetime.datetime.fromtimestamp(time.time())
-		#							.strftime('%Y%m%d_%H-%M-%S'),
-		#						file_extension)
+		return 'save_{}.{}'.format(
+								datetime.datetime.fromtimestamp(time.time())
+									.strftime('%Y%m%d_%H-%M-%S'),
+								file_extension)
 

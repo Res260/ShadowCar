@@ -73,7 +73,7 @@ class AudioManager:
 			Saves the audio to a wave file. Empties self._chunks_queue.
 		"""
 
-		file_name = self._context.get_output_file_name(ShadowCarPackage.AUDIO)
+		self.output_file_name = self._context.get_output_file_name(ShadowCarPackage.AUDIO)
 
 		audio_sample = []
 		while self._chunks_queue.qsize() > 0:
@@ -81,7 +81,7 @@ class AudioManager:
 			audio_sample.append(self._chunks_queue.get())
 
 		self._logger.info('Opening wave file...')
-		wf = wave.open(file_name, 'wb')
+		wf = wave.open(self._context.TEMP_FOLDER + self.output_file_name, 'wb')
 		wf.setnchannels(self.CHANNELS)
 		wf.setsampwidth(self._pyaudio.get_sample_size(self.FORMAT))
 		wf.setframerate(self.RATE)
