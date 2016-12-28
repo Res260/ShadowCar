@@ -25,7 +25,7 @@ class ShadowCar:
 	"""
 
 	FPS = 8
-	RECORDING_TIME = 30  # In seconds
+	RECORDING_TIME = 300  # In seconds
 	TEMP_FOLDER = 'tmp/'
 	SAVE_FOLDER = 'saves/'
 
