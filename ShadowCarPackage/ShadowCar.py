@@ -15,6 +15,7 @@ from threading import Thread
 
 import ShadowCarPackage
 from ShadowCarPackage.AudioManager import AudioManager
+from ShadowCarPackage.BluetoothTrigger import BluetoothTrigger
 from ShadowCarPackage.VideoManager import VideoManager
 
 
@@ -24,7 +25,7 @@ class ShadowCar:
 	"""
 
 	FPS = 8
-	RECORDING_TIME = 3  # In seconds
+	RECORDING_TIME = 30  # In seconds
 	TEMP_FOLDER = 'tmp/'
 	SAVE_FOLDER = 'saves/'
 
@@ -39,6 +40,7 @@ class ShadowCar:
 		self._audio_manager = AudioManager(self, self._logger)
 		self._audio_thread = None
 		self._input_thread = None
+		self._trigger_manager = None
 		self.is_running = False
 
 
@@ -65,11 +67,15 @@ class ShadowCar:
 			Listens for trigger to save the input, then mixes the audio and the
 			video using ffmpeg.
 		"""
-		while self.is_running:
+		self._trigger_manager = BluetoothTrigger(self._logger)
+		self._trigger_manager.start_listening()
+		while not self._trigger_manager.is_triggered():
+			time.sleep(0.2)
+		'''while self.is_running:
 			if self._audio_manager._chunks_queue.qsize() > 23 and\
 				self._video_manager._frames_queue.qsize() > 23: #RSUIVCERDSTUPCIERSTICERSTUCIERSTCUIE
 				self.is_running = False
-			time.sleep(0.2)
+			time.sleep(0.2)'''
 		self._logger.info('Waiting on saves to complete...')
 		self._video_thread.join()
 		self._audio_thread.join()
@@ -81,7 +87,7 @@ class ShadowCar:
 			Instantiate and configure the logger object to use in the app.
 		"""
 		self._logger = logging.getLogger('main')
-		self._logger.setLevel(logging.INFO)
+		self._logger.setLevel(logging.DEBUG)
 		self._logger.addHandler(logging.StreamHandler())
 
 

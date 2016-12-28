@@ -61,7 +61,6 @@ class AudioManager:
 
 		while self._context.is_running:
 			initial_time = time.time()
-			self._logger.debug('Audio loop')
 			self._capture_audio_chunk()
 			while (time.time() - initial_time) < 1 / self._context.FPS:
 				pass

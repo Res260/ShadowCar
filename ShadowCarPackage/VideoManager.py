@@ -53,7 +53,6 @@ class VideoManager:
 
 		while self._context.is_running:
 			initial_time = time.time()
-			self._logger.debug('Video loop')
 			self._timestamps_queue.put(initial_time)
 			self._capture_video_frame()
 			while (time.time() - initial_time) < 1 / self._context.FPS:
