@@ -15,7 +15,7 @@ from threading import Thread
 
 import ShadowCarPackage
 from ShadowCarPackage.AudioManager import AudioManager
-from ShadowCarPackage.BluetoothTrigger import BluetoothTrigger
+from ShadowCarPackage.UnplugTrigger import UnplugTrigger
 from ShadowCarPackage.VideoManager import VideoManager
 
 
@@ -67,15 +67,12 @@ class ShadowCar:
 			Listens for trigger to save the input, then mixes the audio and the
 			video using ffmpeg.
 		"""
-		self._trigger_manager = BluetoothTrigger(self._logger)
+		self._trigger_manager = UnplugTrigger(self._audio_manager,
+		                                      self._logger)
 		self._trigger_manager.start_listening()
 		while not self._trigger_manager.is_triggered():
-			time.sleep(0.2)
-		'''while self.is_running:
-			if self._audio_manager._chunks_queue.qsize() > 23 and\
-				self._video_manager._frames_queue.qsize() > 23: #RSUIVCERDSTUPCIERSTICERSTUCIERSTCUIE
-				self.is_running = False
-			time.sleep(0.2)'''
+			time.sleep(0.1)
+		self.is_running = False
 		self._logger.info('Waiting on saves to complete...')
 		self._video_thread.join()
 		self._audio_thread.join()

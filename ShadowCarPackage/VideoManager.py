@@ -32,15 +32,15 @@ class VideoManager:
 		self._logger = logger
 		self._frames_queue = q.Queue()
 		self._timestamps_queue = q.Queue()
-		self._video_capture = cv2.VideoCapture(0)
-		if not self._video_capture.isOpened():
+		self.video_capture = cv2.VideoCapture(0)
+		if not self.video_capture.isOpened():
 			self._logger.error('Capture device not found.')
 			exit(255)
 		else:
-			self._logger.info('Capture device found: {}'.format(self._video_capture.get(cv2.CAP_PROP_FPS)))
-		self._camera_height = self._video_capture.get(
+			self._logger.info('Capture device found: {}'.format(self.video_capture.get(cv2.CAP_PROP_FPS)))
+		self._camera_height = self.video_capture.get(
 				cv2.CAP_PROP_FRAME_HEIGHT)
-		self._camera_width = self._video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+		self._camera_width = self.video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
 
 
 	def run(self):
@@ -67,7 +67,7 @@ class VideoManager:
 		"""
 
 		# Capture frame-by-frame
-		ret, frame = self._video_capture.read()
+		ret, frame = self.video_capture.read()
 		self._frames_queue.put(frame)
 		# Display the resulting frame
 		cv2.imshow('frame', frame)

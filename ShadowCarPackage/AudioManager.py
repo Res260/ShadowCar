@@ -33,6 +33,7 @@ class AudioManager:
 		self._context = context
 		self._logger = logger
 		self._chunks_queue = q.Queue()
+		self.is_closed = False
 		self.CHUNK = int(self.RATE / self._context.FPS)
 		if self.CHUNK != self.RATE / self._context.FPS:
 			self._logger.error('Current sound sample rate value ({}) is not '
@@ -41,7 +42,7 @@ class AudioManager:
 			                                                 self._context.FPS))
 			exit(254)
 		self._pyaudio = pa.PyAudio()
-		self._stream = self._pyaudio.open(
+		self.stream = self._pyaudio.open(
 				format=self.FORMAT,
 				channels=self.CHANNELS,
 				rate=self.RATE,
@@ -59,11 +60,14 @@ class AudioManager:
 		while not self._context.is_running:
 			pass
 
-		while self._context.is_running:
-			initial_time = time.time()
-			self._capture_audio_chunk()
-			while (time.time() - initial_time) < 1 / self._context.FPS:
-				pass
+		try:
+			while self._context.is_running:
+				initial_time = time.time()
+				self._capture_audio_chunk()
+				while (time.time() - initial_time) < 1 / self._context.FPS:
+					pass
+		except OSError:
+			self.is_closed = True
 
 		self._save()
 
@@ -94,7 +98,7 @@ class AudioManager:
 			Captures an audio chunk of self.CHUNK samples and add it to
 			self._chunks_queue.
 		"""
-		self._chunks_queue.put(self._stream.read(self.CHUNK))
+		self._chunks_queue.put(self.stream.read(self.CHUNK))
 		self._remove_chunk_if_needed()
 		self._logger.debug('{} (aud)'.format(self._chunks_queue.qsize()))
 

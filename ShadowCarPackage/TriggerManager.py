@@ -1,6 +1,5 @@
 """
     @file        TriggerManager
-    @description 
     @author      Res260 
     @created_at  20161226
     @updated_at  20161226
